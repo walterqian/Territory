@@ -9,7 +9,6 @@ import android.view.MenuItem;
 public class CameraActivity extends Activity {
 
     float lat, lon;
-    String slatitude,slongitude;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
