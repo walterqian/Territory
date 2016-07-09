@@ -21,6 +21,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class MapsActivity extends FragmentActivity implements
         OnMapReadyCallback,
@@ -33,7 +34,8 @@ public class MapsActivity extends FragmentActivity implements
     private GoogleApiClient  mGoogleApiClient;
     private Location mLastLocation;
     private LatLng currentLoc;
-    private ArrayList<Marker> markerArrayList;
+    private ArrayList<CustomMarker> markerArrayList = new ArrayList<>();
+    private HashMap markerMap = new HashMap();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,37 +106,41 @@ public class MapsActivity extends FragmentActivity implements
     public void updateCurrentLocation(){
         if (mLastLocation != null && mMap != null) {
             LatLng currentLoc = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLoc,12));
-            makeFlag(new LatLng(0.0,0.0));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLoc, 12));
+
+            LatLng latLng = new LatLng(37.3861,-122.0839);
+            makeFlag(latLng,false,3.0,"FBHQ");
         }
     }
 
-    public void makeFlag(LatLng latLng){
-        LatLng fbHQ = new LatLng(37.484556,-122.147845);
+    public void makeFlag(LatLng latLng, Boolean visit, Double rate, String title){
         Marker marker = mMap.addMarker(new MarkerOptions()
-                .position(fbHQ)
-                .icon(BitmapDescriptorFactory.fromBitmap(resizeFlagIcon(60,60))));
-        markerArrayList.add(marker);
+                .position(latLng)
+                .icon(BitmapDescriptorFactory.fromBitmap(resizeFlagIcon(rate))));
+
+        CustomMarker custom = new CustomMarker(marker,latLng,visit,rate,title);
+        markerArrayList.add(custom);
+        markerMap.put(title,custom);
     }
 
     @Override
     public void onCameraChange(CameraPosition cameraPosition) {
         for (int k=0; k< markerArrayList.size(); k++) {
             if (cameraPosition.zoom < 8)
-                markerArrayList.get(k).setVisible(false);
+                markerArrayList.get(k).marker.setVisible(false);
         }
     }
 
-    public Bitmap resizeFlagIcon(int width, int height){
+    public Bitmap resizeFlagIcon(Double rating){
+        int size = (int) (rating * 6 + 30);
+
         Bitmap imageBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.blue_flag);
-        Bitmap resizedBitmap = Bitmap.createScaledBitmap(imageBitmap, width, height, false);
+        Bitmap resizedBitmap = Bitmap.createScaledBitmap(imageBitmap, size, size, false);
         return resizedBitmap;
     }
 
     @Override
     public boolean onMarkerClick(Marker marker) {
-        if (marker == markerArrayList.get(0)){
-
-        }
+        return false;
     }
 }
