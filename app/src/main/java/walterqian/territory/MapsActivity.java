@@ -74,6 +74,7 @@ public class MapsActivity extends FragmentActivity implements
 
     @Override
     public void onConnected(Bundle bundle) {
+        while(mLastLocation == null)
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
                 mGoogleApiClient);
 
@@ -134,7 +135,8 @@ public class MapsActivity extends FragmentActivity implements
     @Override
     public boolean onMarkerClick(Marker marker) {
         if (marker == markerArrayList.get(0)){
-
+            return true;
         }
+        return false;
     }
 }
