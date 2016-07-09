@@ -1,5 +1,6 @@
 package walterqian.territory;
 
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
@@ -36,6 +37,12 @@ public class MapsActivity extends FragmentActivity implements
     private LatLng currentLoc;
     private ArrayList<CustomMarker> markerArrayList = new ArrayList<>();
     private HashMap markerMap = new HashMap();
+    private String name, email;
+
+    public static final String MyPREFERENCES = "MyPrefs" ;
+    public static final String Name = "nameKey";
+    public static final String Email = "emailKey";
+    SharedPreferences sharedpreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,8 +60,17 @@ public class MapsActivity extends FragmentActivity implements
                     .addApi(LocationServices.API)
                     .build();
         }
+
+        populateUserInfo();
     }
 
+    public void populateUserInfo(){
+        sharedpreferences = getSharedPreferences(MyPREFERENCES,CONTEXT_IGNORE_SECURITY);
+        name = sharedpreferences.getString("name","Walter Qian");
+        email = sharedpreferences.getString("email","dr._bob16@hotmail.com");
+
+        Log.d("MapsActivity","Retreived: " + email);
+    }
 
     /**
      * Manipulates the map once available.
@@ -132,7 +148,7 @@ public class MapsActivity extends FragmentActivity implements
     }
 
     public Bitmap resizeFlagIcon(Double rating){
-        int size = (int) (rating * 6 + 30);
+        int size = (int) (rating * 8 + 40);
 
         Bitmap imageBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.blue_flag);
         Bitmap resizedBitmap = Bitmap.createScaledBitmap(imageBitmap, size, size, false);
