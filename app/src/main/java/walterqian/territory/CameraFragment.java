@@ -50,11 +50,6 @@ public class CameraFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         View v = inflater.inflate(R.layout.fragment_camera, container, false);
-        Bundle b = getActivity().getIntent().getExtras();
-        slatitude = b.getString("latitude");
-        slongitude = b.getString("longitude");
-        lat = Float.parseFloat(slatitude);
-        lon = Float.parseFloat(slongitude);
         // Check if camera is available.
         if (checkForCameraHardware(getActivity())) {
             Log.d("CameraFragment", "Camera hardware is available! :)");

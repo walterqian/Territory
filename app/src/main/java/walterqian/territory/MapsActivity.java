@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -30,21 +31,29 @@ public class MapsActivity extends FragmentActivity implements
         GoogleMap.OnCameraChangeListener,
         GoogleMap.OnMarkerClickListener {
 
+    private String TAG = "MapActivity";
     private GoogleMap mMap;
     private GoogleApiClient  mGoogleApiClient;
     private Location mLastLocation;
     private LatLng currentLoc;
     private ArrayList<CustomMarker> markerArrayList = new ArrayList<>();
     private HashMap markerMap = new HashMap();
+    private TerritoryMarkFragment item_display;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+
+        FragmentManager manager = getSupportFragmentManager();
+        SupportMapFragment mapFragment = (SupportMapFragment) manager
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        item_display = new TerritoryMarkFragment();
+        createItemFragment();
+        //showItemFragment();
 
         if (mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -133,7 +142,7 @@ public class MapsActivity extends FragmentActivity implements
     }
 
     public Bitmap resizeFlagIcon(Double rating){
-        int size = (int) (rating * 6 + 30);
+        int size = (int) (rating * 6 + 90);
 
         Bitmap imageBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.blue_flag);
         Bitmap resizedBitmap = Bitmap.createScaledBitmap(imageBitmap, size, size, false);
@@ -142,6 +151,46 @@ public class MapsActivity extends FragmentActivity implements
 
     @Override
     public boolean onMarkerClick(Marker marker) {
+
         return false;
+    }
+
+    public void createItemFragment(){
+        Log.d(TAG,"startitemFragment");
+        getFragmentManager().beginTransaction()
+                .add(R.id.search_item_container, item_display)
+                //    .addToBackStack(null)
+                .commit();
+        getFragmentManager().beginTransaction()
+                .show(item_display)
+                .commit();
+    }
+
+    public void hideItemFragment(){
+        getFragmentManager().beginTransaction()
+                .hide(item_display)
+                .commit();
+    }
+
+    public void showItemFragment(){
+
+        if (!item_display.isAdded()) {
+            Log.d(TAG,"createFragment: not added");
+            getFragmentManager().beginTransaction()
+                    .add(R.id.search_item_container, item_display)
+                    //    .addToBackStack(null)
+                    .commit();
+        }
+        else {
+            Log.d(TAG,"createFragment: fragment already created");
+            getFragmentManager().beginTransaction()
+                    .show(item_display)
+                    // .addToBackStack(null)
+                    .commit();
+        }
+
+//        floorPlanVisible = true;
+//        disableClicks = true;
+//        turnDark(true);
     }
 }

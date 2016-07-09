@@ -2,10 +2,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginLeft="25dp"
-    android:layout_marginRight="25dp"
-    android:layout_marginBottom="80dp"
-    android:layout_marginTop="50dp"
     android:orientation="vertical"
     tools:context="walterqian.territory.TerritoryMarkFragment">
 
@@ -14,16 +10,22 @@
         android:layout_marginTop="10dp"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
+        android:layout_weight="3"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
         />
 
     <TextView
         android:id="@+id/snippet"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="a description of the image"/>
 
     <Button
+        android:id="@+id/unlock"
+        android:layout_weight="1"
+        android:text="unlock"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
