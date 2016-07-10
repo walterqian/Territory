@@ -2,17 +2,21 @@ package walterqian.territory;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -20,6 +24,7 @@ import android.widget.ListView;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.facebook.FacebookSdk;
 import com.facebook.login.LoginManager;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.common.ConnectionResult;
@@ -47,6 +52,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -76,6 +82,8 @@ public class MapsActivity extends ActionBarActivity implements
     private String name, email;
     private LoginButton loginButton;
     private ListView mDrawerList;
+    private DrawerLayout mDrawerLayout;
+    private ActionBarDrawerToggle mDrawerToggle;
 
     public static final String Name = "nameKey";
     public static final String Email = "emailKey";
@@ -88,6 +96,8 @@ public class MapsActivity extends ActionBarActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        FacebookSdk.sdkInitialize(getApplicationContext());
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
 
@@ -130,9 +140,7 @@ public class MapsActivity extends ActionBarActivity implements
             }
         });
 
-        PostTask post = new PostTask();
-        post.execute();
-
+        getSupportActionBar().setTitle("Home");
         createDrawerList();
     }
 
@@ -145,8 +153,38 @@ public class MapsActivity extends ActionBarActivity implements
         ArrayAdapter adapter = new ArrayAdapter(this,
                 R.layout.drawer_list_item, items);
 
+        mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+
     /* Setting the adapter to mDrawerList */
         mDrawerList.setAdapter(adapter);
+
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerToggle = new ActionBarDrawerToggle(
+                this,                  /* host Activity */
+                mDrawerLayout,         /* DrawerLayout object */
+                R.drawable.blue_flag,  /* nav drawer icon to replace 'Up' caret */
+                R.string.drawer_open,  /* "open drawer" description */
+                R.string.drawer_close  /* "close drawer" description */
+        ) {
+
+            /** Called when a drawer has settled in a completely closed state. */
+            public void onDrawerClosed(View view) {
+                super.onDrawerClosed(view);
+                getSupportActionBar().setTitle(R.string.drawer_close);
+            }
+
+            /** Called when a drawer has settled in a completely open state. */
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                getSupportActionBar().setTitle(R.string.drawer_open);
+            }
+        };
+
+        // Set the drawer toggle as the DrawerListener
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
     }
 
     public void populateUserInfo(){
@@ -154,7 +192,7 @@ public class MapsActivity extends ActionBarActivity implements
         name = sharedpreferences.getString("name","Walter Qian");
         email = sharedpreferences.getString("email","failed");
 
-        Log.d("MapsActivity","Retreived: " + email);
+        Log.d("MapsActivity", "Retreived: t" + email);
     }
 
     /**
@@ -195,6 +233,19 @@ public class MapsActivity extends ActionBarActivity implements
 
     }
 
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        mDrawerToggle.onConfigurationChanged(newConfig);
+    }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        // Sync the toggle state after onRestoreInstanceState has occurred.
+        mDrawerToggle.syncState();
+    }
+
     protected void onStart() {
         mGoogleApiClient.connect();
         super.onStart();
@@ -207,22 +258,26 @@ public class MapsActivity extends ActionBarActivity implements
 
     public void updateCurrentLocation(){
         if (mLastLocation != null && mMap != null) {
-            LatLng currentLoc = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+            currentLoc = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLoc, 12));
 
             LatLng latLng = new LatLng(37.3861,-122.0839);
-            makeFlag(latLng,false,3.0,"FBHQ");
+            makeFlag(latLng, false, 3.0, "FBHQ","test");
+
+            String[] array = {"http://52.40.56.30/getFlags"};
+            PostTask post = new PostTask();
+            post.execute(array);
         }
     }
 
-    public void makeFlag(LatLng latLng, Boolean visit, Double rate, String title){
+    public void makeFlag(LatLng latLng, Boolean visit, Double rate, String title, String url){
         Marker marker = mMap.addMarker(new MarkerOptions()
                 .position(latLng)
                 .icon(BitmapDescriptorFactory.fromBitmap(resizeFlagIcon(rate))));
 
-        CustomMarker custom = new CustomMarker(marker,latLng,visit,rate,title);
+        CustomMarker custom = new CustomMarker(marker,latLng,visit,rate,title,url);
         markerArrayList.add(custom);
-        markerMap.put(title,custom);
+        markerMap.put(marker,custom);
     }
 
     @Override
@@ -234,8 +289,8 @@ public class MapsActivity extends ActionBarActivity implements
     }
 
     public Bitmap resizeFlagIcon(Double rating){
-        int size = (int) (rating * 6 + 90);
-        Bitmap imageBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.blue_flag);
+        int size = (int) (rating * 15 + 10);
+        Bitmap imageBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.red_flag);
         Bitmap resizedBitmap = Bitmap.createScaledBitmap(imageBitmap, size, size, false);
         return resizedBitmap;
     }
@@ -245,6 +300,19 @@ public class MapsActivity extends ActionBarActivity implements
         showItemFragment();
         return true;
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Pass the event to ActionBarDrawerToggle, if it returns
+        // true, then it has handled the app icon touch event
+        if (mDrawerToggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+        // Handle your other action bar items...
+
+        return super.onOptionsItemSelected(item);
+    }
+
 
     public void createItemFragment(){
         Log.d(TAG,"startitemFragment");
@@ -300,21 +368,35 @@ public class MapsActivity extends ActionBarActivity implements
     }
 
     private class PostTask extends AsyncTask<String, String, String> {
+        private String mode = "";
+
         @Override
         protected String doInBackground(String... data) {
             // Create a new HttpClient and Post Header
-//            String url = data[0];
-
+            String url = data[0];
 
             HttpClient httpclient = new DefaultHttpClient();
-            HttpPost httppost = new HttpPost("http://52.40.56.30/login");
+            HttpPost httppost = new HttpPost(url);
             HttpResponse response;
 
             JSONObject json = new JSONObject();
+            Log.d("MapsActivity: Url",url);
+
             try {
                 //add data
-                json.put("email", email);
-                json.put("name", name);
+                switch (url){
+                    case "http://52.40.56.30/login":
+                        json.put("email",email);
+                        json.put("name",name);
+                        mode = "login";
+                        break;
+                    case "http://52.40.56.30/getFlags":
+                        json.put("email",email);
+                        json.put("lat",currentLoc.latitude);
+                        json.put("long",currentLoc.longitude);
+                        mode = "getflags";
+                        break;
+                }
                 StringEntity se = new StringEntity( json.toString());
                 Log.d("MapsActivity","JSONObject: " + json);
                 se.setContentType(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
@@ -333,14 +415,13 @@ public class MapsActivity extends ActionBarActivity implements
                     if(s==null || s.length()==0)
                         break;
                     sb.append(s);
-
                 }
                 buf.close();
                 ips.close();
 
                 Log.d("MapsActivity","Sent Post Request");
                 Log.d("MapsActivity","Response: " + sb.toString());
-                return "";
+                return sb.toString();
             } catch (ClientProtocolException e) {
 
             } catch (IOException e) {
@@ -350,5 +431,82 @@ public class MapsActivity extends ActionBarActivity implements
             }
             return "Success";
         }
+
+        @Override
+        protected void onPostExecute(String result) {
+            Log.d("MapsActivity onpost: ",result);
+            result = result.replaceAll("u'","'");
+            if (mode.equals("getflags")){
+
+                Log.d("got here","");
+                try {
+                    Log.d("got here","");
+                    JSONObject jsnobject = new JSONObject(result);
+                    Log.d("got here","");
+                    JSONArray jsonArray = jsnobject.getJSONArray("res");
+                    Log.d("Maps: Onpostexecute","jsonarray:" + result );
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        JSONObject object = jsonArray.getJSONObject(i);
+                        Log.d("Maps: Onpostexecute","object:" );
+                        createFlagFromObject(object);
+                    }
+                }
+                catch (JSONException e){
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        public void createFlagFromObject(JSONObject object){
+            try {
+                Double rating = Double.parseDouble(object.getString("rating"));
+                String name = object.getString("name");
+                String url = object.getString("url");
+                Double lat = Double.parseDouble(object.getString("lat"));
+                Double lon = Double.parseDouble(object.getString("long"));
+                LatLng latlng = new LatLng(lat,lon);
+
+                makeFlag(latlng,false,rating,name,url);
+            }
+            catch (JSONException e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private class DrawerItemClickListener implements ListView.OnItemClickListener {
+        @Override
+        public void onItemClick(AdapterView parent, View view, int position, long id) {
+            selectItem(position);
+        }
+    }
+
+    /** Swaps fragments in the main content view */
+    private void selectItem(int position) {
+
+        //logout
+        if (position == 3){
+            LoginManager.getInstance().logOut();
+            startActivity(new Intent(MapsActivity.this, LoginActivity.class));
+        }
+
+        // Create a new fragment and specify the planet to show based on position
+        /*
+        Fragment fragment = new PlanetFragment();
+        Bundle args = new Bundle();
+        args.putInt(PlanetFragment.ARG_PLANET_NUMBER, position);
+        fragment.setArguments(args);
+
+        // Insert the fragment by replacing any existing fragment
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.content_frame, fragment)
+                .commit();
+
+        // Highlight the selected item, update the title, and close the drawer
+        mDrawerList.setItemChecked(position, true);
+        setTitle(mPlanetTitles[position]);
+        mDrawerLayout.closeDrawer(mDrawerList);
+        */
     }
 }
