@@ -1,6 +1,8 @@
 package walterqian.territory;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
@@ -45,15 +47,42 @@ public class CameraFragment extends Fragment {
                 startActivity(i);
             }
             else {
-                //retryframent
+                retryfragment();
 
             }
             Toast.makeText(getActivity(), "Sent", Toast.LENGTH_SHORT).show();
         }
     };
 
+    public void finishCamera(){
+        getActivity().finish();
+    }
+
     public boolean verifyphoto(){
-        return true;
+        return false;
+    }
+
+    public void retryfragment(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setMessage("The picture you took did not match.");
+
+// Add the buttons
+        builder.setPositiveButton("try again", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked OK button
+                dialog.cancel();
+            }
+        });
+        builder.setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User cancelled the dialog
+                finishCamera();
+            }
+        });
+
+// Create the AlertDialog
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
     @Override
