@@ -18,13 +18,15 @@ public class CustomMarker {
     public Double rating;
     public String name;
     public Marker marker;
+    public String url;
 
-    CustomMarker(Marker flag,LatLng latLng, Boolean visit, Double rate, String title){
+    CustomMarker(Marker flag,LatLng latLng, Boolean visit, Double rate, String title, String link){
         latlng = latLng;
         visited = visit;
         rating = rate;
         name = title;
         marker = flag;
+        url = link;
     }
 
 }
