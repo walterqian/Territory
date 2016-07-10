@@ -3,6 +3,7 @@ package walterqian.territory;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
@@ -21,6 +22,7 @@ import com.facebook.login.widget.LoginButton;
 
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 import static com.facebook.CallbackManager.*;
@@ -74,7 +76,7 @@ public class LoginActivity extends FragmentActivity {
 
                                 try {
 
-                                    sharedpreferences = getSharedPreferences(MyPREFERENCES,CONTEXT_IGNORE_SECURITY);
+                                    sharedpreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                                     SharedPreferences.Editor editor = sharedpreferences.edit();
 
                                     editor.putString(Name, object.getString("name"));
@@ -128,4 +130,6 @@ public class LoginActivity extends FragmentActivity {
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
         return accessToken != null;
     }
+
+
 }
