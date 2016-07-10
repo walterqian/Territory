@@ -2,41 +2,52 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#ffffff"
+    android:background="@drawable/round"
     android:orientation="vertical"
     android:clickable="true"
     tools:context="walterqian.territory.TerritoryMarkFragment">
 
     <ImageView
         android:id="@+id/territory_mark_image"
-        android:layout_marginTop="20dp"
-        android:layout_marginLeft="15dp"
-        android:layout_marginRight="15dp"
-        android:layout_weight="4"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_width="240dp"
+        android:layout_height="240dp"
+        android:layout_gravity="center_horizontal"
         />
 
     <TextView
         android:id="@+id/snippet"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
         android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
         android:layout_weight="2"
-        android:textSize="15dp"
+        android:textSize="18dp"
+        android:gravity="center_horizontal"
+        android:textColor="@color/Black"
         android:text="a description of the image"/>
 
 
     <Button
         android:id="@+id/unlock"
-        android:text="unlock"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginLeft="150dp"
-        android:gravity="center"/>
 
+        android:text="UNLOCK"
+        android:textColor="#FFFFFF"
+        android:textSize="16dp"
 
+        android:layout_width="150dp"
+        android:layout_height="60dp"
+        android:background="@drawable/buttonshape"
+        android:shadowColor="#3D383B"
+        android:shadowDx="2"
+        android:shadowDy="3"
+        android:shadowRadius="5"
+        android:layout_marginBottom="5dp"
+        android:layout_gravity="center_horizontal"
+        />
 
 
 

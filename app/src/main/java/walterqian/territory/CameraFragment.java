@@ -4,11 +4,14 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,20 +23,34 @@ import android.widget.Toast;
 
 
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.content.ByteArrayBody;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 //import com.loopj.android.http.*;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 
 /**
  * Created by bpon on 7/9/16.
@@ -130,7 +147,6 @@ public class CameraFragment extends Fragment {
         mTakePhotoButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 //Toast.makeText(getActivity(), "Take a photo", Toast.LENGTH_SHORT).show();
-
                 mCamera.takePicture(mShutterCallback, mRawCallback, mJpegCallback);
             }
         });
@@ -167,29 +183,71 @@ public class CameraFragment extends Fragment {
     }
 
 
-    private class UploadPhotoTask extends AsyncTask<byte [] , String, String>{
+    private class UploadPhotoTask extends AsyncTask<byte [] , String,String>{
         @Override
         protected String doInBackground(byte []... params) {
             byte [] rawJpegImageData = params[0];
+            String imageString = Base64.encodeToString(rawJpegImageData, Base64.DEFAULT);
+
             HttpClient httpClient = new DefaultHttpClient();
             //HttpClient httpClient = HttpClientBuilder.create().build();
             HttpPost postRequest = new HttpPost("http://52.40.56.30/verify");
-            MultipartEntity entity = new MultipartEntity(
-                    HttpMultipartMode.BROWSER_COMPATIBLE);
 
-            //Set Data and Content-type header for the image
-            entity.addPart("file",
-                    new ByteArrayBody(rawJpegImageData, "image/jpeg", "file"));
-            postRequest.setEntity(entity);
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
 
+            JSONArray jsonArray;
+            String lat = preferences.getString("Lat", "failed to get lat");
+            String lng = preferences.getString("Lng", "failed to get lng");
+            String url = preferences.getString("url","failed to get url");
+            String email = preferences.getString("email","failed to get email");
+
+            ArrayList<NameValuePair> ValuePairs= new ArrayList<NameValuePair>();
+            ValuePairs .add(new BasicNameValuePair("image", imageString));
+            ValuePairs .add(new BasicNameValuePair("targetUrl", url));
+            ValuePairs .add(new BasicNameValuePair("lat", lat));
+            ValuePairs .add(new BasicNameValuePair("long", lng));
+
+
+            JSONObject obj = new JSONObject();
+            jsonArray = new JSONArray(ValuePairs);
+
+            Log.d("camera sent", jsonArray.toString());
+            Log.d("camera asynctask", ValuePairs.toString());
+            Log.d("camera asynctask lat",ValuePairs.get(2).toString());
+            Log.d("camera asynctask lng",ValuePairs.get(3).toString());
+            Log.d("camera asynctask url",ValuePairs.get(1).toString());
             try {
+                obj.put("image",imageString);
+                obj.put("email",email);
+                obj.put("targetUrl",url);
+                obj.put("lat",lat);
+                obj.put("lng",lng);
+                StringEntity se = new StringEntity( obj.toString());
+                se.setContentType(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+                postRequest.setEntity(se);
 
+                Log.d("camera sent", obj.toString());
                 HttpResponse response = httpClient.execute(postRequest);
-                //Read the response
-                String jsonString = EntityUtils.toString(response.getEntity());
-                Log.v("uploading", "after uploading file "
-                        + jsonString);
-                return jsonString;
+                //Read the
+
+                InputStream ips  = response.getEntity().getContent();
+                BufferedReader buf = new BufferedReader(new InputStreamReader(ips,"UTF-8"));
+
+                StringBuilder sb = new StringBuilder();
+                String s;
+                while(true )
+                {
+                    s = buf.readLine();
+                    if(s==null || s.length()==0)
+                        break;
+                    sb.append(s);
+                }
+                buf.close();
+                ips.close();
+
+                Log.v("camera return", "after uploading file "
+                        + sb.toString());
+                return sb.toString();
 
             } catch (ClientProtocolException e) {
                 // TODO Auto-generated catch block
@@ -197,6 +255,8 @@ public class CameraFragment extends Fragment {
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
+            } catch (JSONException e){
+
             }
             return "FAAAILED";
         }
@@ -205,15 +265,24 @@ public class CameraFragment extends Fragment {
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
 
+            Boolean verified = false;
+            try {
+                JSONObject obj = new JSONObject(s);
+                verified = obj.getBoolean("result");
+            }
+            catch (JSONException e){
+                e.printStackTrace();
+            }
+
             Log.d("async", "response recorded");
 
-            if(verifyphoto()){
+            verified = true;
+            if(verified){
                 Intent i = new Intent(getActivity(), UnlockActivity.class);
                 startActivity(i);
             }
             else {
                 retryfragment();
-
             }
         }
     }

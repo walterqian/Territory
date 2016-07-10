@@ -261,21 +261,27 @@ public class MapsActivity extends ActionBarActivity implements
             currentLoc = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLoc, 12));
 
-            LatLng latLng = new LatLng(37.3861,-122.0839);
-            makeFlag(latLng, false, 3.0, "FBHQ","test");
+            sharedpreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            SharedPreferences.Editor editor = sharedpreferences.edit();
+            editor.putString("Lat",String.valueOf(currentLoc.latitude));
+            editor.putString("Lng", String.valueOf(currentLoc.longitude));
+            editor.commit();
 
+            Log.d("pref: latlng", sharedpreferences.getString("Lat","test") + sharedpreferences.getString("Lng","test"));
             String[] array = {"http://52.40.56.30/getFlags"};
             PostTask post = new PostTask();
             post.execute(array);
+
+
         }
     }
 
-    public void makeFlag(LatLng latLng, Boolean visit, Double rate, String title, String url){
+    public void makeFlag(LatLng latLng, Boolean visit, Double rate, String title, String url, String snippet){
         Marker marker = mMap.addMarker(new MarkerOptions()
                 .position(latLng)
                 .icon(BitmapDescriptorFactory.fromBitmap(resizeFlagIcon(rate))));
 
-        CustomMarker custom = new CustomMarker(marker,latLng,visit,rate,title,url);
+        CustomMarker custom = new CustomMarker(marker,latLng,visit,rate,title,url,snippet);
         markerArrayList.add(custom);
         markerMap.put(marker,custom);
     }
@@ -297,7 +303,21 @@ public class MapsActivity extends ActionBarActivity implements
 
     @Override
     public boolean onMarkerClick(Marker marker) {
+        sharedpreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences.Editor editor = sharedpreferences.edit();
+
+        CustomMarker customMarker = (CustomMarker) markerMap.get(marker);
+        editor.putString("url", customMarker.url);
+        editor.putString("snippet", customMarker.snippet);
+        editor.putString("title", customMarker.name);
+        editor.commit();
+
+        Log.d("markerclick:", sharedpreferences.getString("url", "test"));
+        Log.d("markerclick:", sharedpreferences.getString("snippet","test"));
+
+        item_display.update();
         showItemFragment();
+
         return true;
     }
 
@@ -434,8 +454,10 @@ public class MapsActivity extends ActionBarActivity implements
 
         @Override
         protected void onPostExecute(String result) {
+
+            result = result.replaceAll("u'", "'");
+            result = result.replaceAll("u\"","\"");
             Log.d("MapsActivity onpost: ",result);
-            result = result.replaceAll("u'","'");
             if (mode.equals("getflags")){
 
                 Log.d("got here","");
@@ -465,8 +487,9 @@ public class MapsActivity extends ActionBarActivity implements
                 Double lat = Double.parseDouble(object.getString("lat"));
                 Double lon = Double.parseDouble(object.getString("long"));
                 LatLng latlng = new LatLng(lat,lon);
+                String snippet = object.getString("snippet");
 
-                makeFlag(latlng,false,rating,name,url);
+                makeFlag(latlng,false,rating,name,url,snippet);
             }
             catch (JSONException e){
                 e.printStackTrace();
@@ -509,4 +532,5 @@ public class MapsActivity extends ActionBarActivity implements
         mDrawerLayout.closeDrawer(mDrawerList);
         */
     }
+
 }

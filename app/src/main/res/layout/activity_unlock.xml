@@ -10,36 +10,58 @@
     android:orientation="vertical"
     tools:context="walterqian.territory.UnlockActivity">
 
+    <ImageView
+        android:layout_marginTop="60dp"
+        android:id="@+id/completed_photo"
+        android:background="@drawable/image_border"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_gravity="center_horizontal"/>
+
     <TextView
-        android:id="@+id/congrats"
+        android:id="@+id/discovered"
+        android:layout_marginTop="12dp"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:textSize="30dp"
+        android:layout_height="wrap_content"
+        android:textColor="@color/Black"
+        android:textSize="24dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:gravity="center_horizontal"
+        android:layout_gravity="center_horizontal"
         android:text="CONGRATS!!"/>
 
-    <ImageView
-        android:id="@+id/checkmark"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="3"/>
 
     <RatingBar
+        android:layout_gravity="center_horizontal"
         android:id="@+id/rating"
         android:numStars="5"
+        android:layout_marginTop="10dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
     <EditText
+        android:background="@null"
         android:id="@+id/comments"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="2"/>
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_height="60dp"
+        android:text="Tell us your thoughts!"
+        android:textAlignment="center"
+        android:textColor="@color/Black"
+        android:layout_gravity="center_horizontal"/>
 
     <Button
+        android:layout_gravity="center_horizontal"
+        android:textColor="@color/FloralWhite"
         android:id="@+id/submit"
         android:text="Submit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:textSize="16dp"
+        android:layout_marginTop="30dp"
+        android:layout_width="match_parent"
+        android:background="@drawable/buttonshape"
+        android:layout_height="45dp" />
+
 
 </LinearLayout>

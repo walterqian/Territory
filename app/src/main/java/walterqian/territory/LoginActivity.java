@@ -73,14 +73,13 @@ public class LoginActivity extends FragmentActivity {
                             public void onCompleted(JSONObject object, GraphResponse response) {
 
                                 Log.e("response: ", response + "");
-
                                 try {
 
                                     sharedpreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                                     SharedPreferences.Editor editor = sharedpreferences.edit();
 
-                                    editor.putString(Name, object.getString("name"));
-                                    editor.putString(Email, object.getString("email"));
+                                    editor.putString("name", object.getString("name"));
+                                    editor.putString("email", object.getString("email"));
                                     editor.commit();
                                     Log.d("LoginActivity", "Added " + object.getString("email"));
                                     Intent intent = new Intent(LoginActivity.this,MapsActivity.class);

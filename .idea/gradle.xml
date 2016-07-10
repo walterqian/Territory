@@ -14,13 +14,6 @@
             <option value="$PROJECT_DIR$/httpmime-4.5.2" />
           </set>
         </option>
-        <option name="myModules">
-          <set>
-            <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/httpmime-4.5.2" />
-          </set>
-        </option>
       </GradleProjectSettings>
     </option>
   </component>
