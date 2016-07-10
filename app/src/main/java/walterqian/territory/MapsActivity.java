@@ -348,8 +348,6 @@ public class MapsActivity extends ActionBarActivity implements
             } catch (JSONException e){
 
             }
-
-
             return "Success";
         }
     }
