@@ -7,8 +7,13 @@
     android:id="@+id/map"
     tools:context="walterqian.territory.MapsActivity">
 
+    <View
+        android:id="@+id/back_view"
+        android:visibility="invisible"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"></View>
+
     <FrameLayout
-        android:background="#3200ffff"
         android:id="@+id/search_item_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
