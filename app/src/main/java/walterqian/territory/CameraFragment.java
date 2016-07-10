@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -16,6 +17,23 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.content.ByteArrayBody;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
+
+//import com.loopj.android.http.*;
+
+import java.io.IOException;
 
 /**
  * Created by bpon on 7/9/16.
@@ -42,14 +60,10 @@ public class CameraFragment extends Fragment {
     Camera.PictureCallback mJpegCallback = new Camera.PictureCallback() {
         public void onPictureTaken(byte[] data, Camera camera) {
             Log.d("CameraFragment", "onPictureTaken - jpeg");
-            if(verifyphoto()){
-                Intent i = new Intent(getActivity(), UnlockActivity.class);
-                startActivity(i);
-            }
-            else {
-                retryfragment();
 
-            }
+
+            UploadPhotoTask task = new UploadPhotoTask();
+            task.execute(data);
             Toast.makeText(getActivity(), "Sent", Toast.LENGTH_SHORT).show();
         }
     };
@@ -151,4 +165,58 @@ public class CameraFragment extends Fragment {
         }
         return c; // returns null if camera is unavailable
     }
+
+
+    private class UploadPhotoTask extends AsyncTask<byte [] , String, String>{
+        @Override
+        protected String doInBackground(byte []... params) {
+            byte [] rawJpegImageData = params[0];
+            HttpClient httpClient = new DefaultHttpClient();
+            //HttpClient httpClient = HttpClientBuilder.create().build();
+            HttpPost postRequest = new HttpPost("http://52.40.56.30/verify");
+            MultipartEntity entity = new MultipartEntity(
+                    HttpMultipartMode.BROWSER_COMPATIBLE);
+
+            //Set Data and Content-type header for the image
+            entity.addPart("file",
+                    new ByteArrayBody(rawJpegImageData, "image/jpeg", "file"));
+            postRequest.setEntity(entity);
+
+            try {
+
+                HttpResponse response = httpClient.execute(postRequest);
+                //Read the response
+                String jsonString = EntityUtils.toString(response.getEntity());
+                Log.v("uploading", "after uploading file "
+                        + jsonString);
+                return jsonString;
+
+            } catch (ClientProtocolException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            return "FAAAILED";
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+
+            Log.d("async", "response recorded");
+
+            if(verifyphoto()){
+                Intent i = new Intent(getActivity(), UnlockActivity.class);
+                startActivity(i);
+            }
+            else {
+                retryfragment();
+
+            }
+        }
+    }
+
+
 }
