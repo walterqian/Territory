@@ -1,15 +1,27 @@
 package walterqian.territory;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
+import android.os.AsyncTask;
+import android.preference.PreferenceManager;
+import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.facebook.login.LoginManager;
+import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
@@ -23,10 +35,31 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class MapsActivity extends FragmentActivity implements
+public class MapsActivity extends ActionBarActivity implements
         OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
@@ -40,6 +73,13 @@ public class MapsActivity extends FragmentActivity implements
     private LatLng currentLoc;
     private ArrayList<CustomMarker> markerArrayList = new ArrayList<>();
     private HashMap markerMap = new HashMap();
+    private String name, email;
+    private LoginButton loginButton;
+    private ListView mDrawerList;
+
+    public static final String Name = "nameKey";
+    public static final String Email = "emailKey";
+    SharedPreferences sharedpreferences;
     private TerritoryMarkFragment item_display;
     private View backView;
     private boolean disableClicks;
@@ -79,8 +119,43 @@ public class MapsActivity extends FragmentActivity implements
                     .addApi(LocationServices.API)
                     .build();
         }
+
+        populateUserInfo();
+        loginButton = (LoginButton)findViewById(R.id.login_button);
+        loginButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LoginManager.getInstance().logOut();
+                startActivity(new Intent(MapsActivity.this, LoginActivity.class));
+            }
+        });
+
+        PostTask post = new PostTask();
+        post.execute();
+
+        createDrawerList();
     }
 
+    public void createDrawerList(){
+        String[] items = {"Home","Profile","Timeline", "Logout"};
+
+        mDrawerList = (ListView) findViewById(R.id.drawer_list);
+
+        /* Creating an ArrayAdapter to add items to mDrawerList */
+        ArrayAdapter adapter = new ArrayAdapter(this,
+                R.layout.drawer_list_item, items);
+
+    /* Setting the adapter to mDrawerList */
+        mDrawerList.setAdapter(adapter);
+    }
+
+    public void populateUserInfo(){
+        sharedpreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        name = sharedpreferences.getString("name","Walter Qian");
+        email = sharedpreferences.getString("email","failed");
+
+        Log.d("MapsActivity","Retreived: " + email);
+    }
 
     /**
      * Manipulates the map once available.
@@ -160,7 +235,6 @@ public class MapsActivity extends FragmentActivity implements
 
     public Bitmap resizeFlagIcon(Double rating){
         int size = (int) (rating * 6 + 90);
-
         Bitmap imageBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.blue_flag);
         Bitmap resizedBitmap = Bitmap.createScaledBitmap(imageBitmap, size, size, false);
         return resizedBitmap;
@@ -223,5 +297,60 @@ public class MapsActivity extends FragmentActivity implements
             backView.setVisibility(View.VISIBLE);
         else
             backView.setVisibility(View.INVISIBLE);
+    }
+
+    private class PostTask extends AsyncTask<String, String, String> {
+        @Override
+        protected String doInBackground(String... data) {
+            // Create a new HttpClient and Post Header
+//            String url = data[0];
+
+
+            HttpClient httpclient = new DefaultHttpClient();
+            HttpPost httppost = new HttpPost("http://52.40.56.30/login");
+            HttpResponse response;
+
+            JSONObject json = new JSONObject();
+            try {
+                //add data
+                json.put("email", email);
+                json.put("name", name);
+                StringEntity se = new StringEntity( json.toString());
+                Log.d("MapsActivity","JSONObject: " + json);
+                se.setContentType(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+                httppost.setEntity(se);
+                //execute http post
+                response = httpclient.execute(httppost);
+
+                InputStream ips  = response.getEntity().getContent();
+                BufferedReader buf = new BufferedReader(new InputStreamReader(ips,"UTF-8"));
+
+                StringBuilder sb = new StringBuilder();
+                String s;
+                while(true )
+                {
+                    s = buf.readLine();
+                    if(s==null || s.length()==0)
+                        break;
+                    sb.append(s);
+
+                }
+                buf.close();
+                ips.close();
+
+                Log.d("MapsActivity","Sent Post Request");
+                Log.d("MapsActivity","Response: " + sb.toString());
+                return "";
+            } catch (ClientProtocolException e) {
+
+            } catch (IOException e) {
+
+            } catch (JSONException e){
+
+            }
+
+
+            return "Success";
+        }
     }
 }
