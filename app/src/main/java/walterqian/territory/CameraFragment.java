@@ -1,6 +1,7 @@
 package walterqian.territory;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.os.Bundle;
@@ -23,8 +24,6 @@ public class CameraFragment extends Fragment {
     Camera mCamera;
     CameraPreview mCameraPreview;
     ImageView cameraView;
-    Float lat, lon;
-    String slatitude, slongitude;
 
     Camera.ShutterCallback mShutterCallback = new Camera.ShutterCallback() {
         public void onShutter() {
@@ -41,9 +40,21 @@ public class CameraFragment extends Fragment {
     Camera.PictureCallback mJpegCallback = new Camera.PictureCallback() {
         public void onPictureTaken(byte[] data, Camera camera) {
             Log.d("CameraFragment", "onPictureTaken - jpeg");
-            Toast.makeText(getActivity(), "Sent Snap", Toast.LENGTH_SHORT).show();
+            if(verifyphoto()){
+                Intent i = new Intent(getActivity(), UnlockActivity.class);
+                startActivity(i);
+            }
+            else {
+                //retryframent
+
+            }
+            Toast.makeText(getActivity(), "Sent", Toast.LENGTH_SHORT).show();
         }
     };
+
+    public boolean verifyphoto(){
+        return true;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -107,6 +118,7 @@ public class CameraFragment extends Fragment {
             c = Camera.open(0); // attempt to get a Camera instance
         } catch (Exception e) {
             // Camera is not available (in use or does not exist)
+            Log.d("camerafragment", "camera not available");
         }
         return c; // returns null if camera is unavailable
     }

@@ -17,6 +17,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.view.MotionEvent;
+import android.view.View;
 
 import com.facebook.login.LoginManager;
 import com.facebook.login.widget.LoginButton;
@@ -79,6 +81,9 @@ public class MapsActivity extends ActionBarActivity implements
     public static final String Email = "emailKey";
     SharedPreferences sharedpreferences;
     private TerritoryMarkFragment item_display;
+    private View backView;
+    private boolean disableClicks;
+    private boolean fragmentVisible;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,10 +91,22 @@ public class MapsActivity extends ActionBarActivity implements
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
 
+        backView = (View) findViewById(R.id.back_view);
+
+        backView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (fragmentVisible)
+                    removeFragment();
+                return disableClicks;
+            }
+        });
         FragmentManager manager = getSupportFragmentManager();
         SupportMapFragment mapFragment = (SupportMapFragment) manager
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+
 
         item_display = new TerritoryMarkFragment();
         createItemFragment();
@@ -116,11 +133,11 @@ public class MapsActivity extends ActionBarActivity implements
         PostTask post = new PostTask();
         post.execute();
 
-
+        createDrawerList();
     }
 
     public void createDrawerList(){
-        String[] items = {"Home","Profile","Timeline"};
+        String[] items = {"Home","Profile","Timeline", "Logout"};
 
         mDrawerList = (ListView) findViewById(R.id.drawer_list);
 
@@ -130,10 +147,6 @@ public class MapsActivity extends ActionBarActivity implements
 
     /* Setting the adapter to mDrawerList */
         mDrawerList.setAdapter(adapter);
-
-
-
-
     }
 
     public void populateUserInfo(){
@@ -229,8 +242,8 @@ public class MapsActivity extends ActionBarActivity implements
 
     @Override
     public boolean onMarkerClick(Marker marker) {
-
-        return false;
+        showItemFragment();
+        return true;
     }
 
     public void createItemFragment(){
@@ -240,7 +253,7 @@ public class MapsActivity extends ActionBarActivity implements
                 //    .addToBackStack(null)
                 .commit();
         getFragmentManager().beginTransaction()
-                .show(item_display)
+                .hide(item_display)
                 .commit();
     }
 
@@ -252,24 +265,38 @@ public class MapsActivity extends ActionBarActivity implements
 
     public void showItemFragment(){
 
-        if (!item_display.isAdded()) {
-            Log.d(TAG,"createFragment: not added");
-            getFragmentManager().beginTransaction()
-                    .add(R.id.search_item_container, item_display)
-                    //    .addToBackStack(null)
-                    .commit();
-        }
-        else {
-            Log.d(TAG,"createFragment: fragment already created");
+//        if (!item_display.isAdded()) {
+//            Log.d(TAG,"createFragment: not added");
+//            getFragmentManager().beginTransaction()
+//                    .add(R.id.search_item_container, item_display)
+//                    //    .addToBackStack(null)
+//                    .commit();
+//        }
+//        else {
+           // Log.d(TAG,"createFragment: fragment already created");
             getFragmentManager().beginTransaction()
                     .show(item_display)
                     // .addToBackStack(null)
                     .commit();
-        }
+        //}
 
-//        floorPlanVisible = true;
-//        disableClicks = true;
-//        turnDark(true);
+        fragmentVisible = true;
+        disableClicks = true;
+        turnDark(true);
+    }
+
+    private void removeFragment() {
+        fragmentVisible = false;
+        disableClicks = false;
+        turnDark(false);
+        hideItemFragment();
+    }
+
+    public void turnDark(boolean darkScreen){
+        if (darkScreen)
+            backView.setVisibility(View.VISIBLE);
+        else
+            backView.setVisibility(View.INVISIBLE);
     }
 
     private class PostTask extends AsyncTask<String, String, String> {
