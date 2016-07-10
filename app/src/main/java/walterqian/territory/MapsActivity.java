@@ -277,9 +277,17 @@ public class MapsActivity extends ActionBarActivity implements
     }
 
     public void makeFlag(LatLng latLng, Boolean visit, Double rate, String title, String url, String snippet){
-        Marker marker = mMap.addMarker(new MarkerOptions()
-                .position(latLng)
-                .icon(BitmapDescriptorFactory.fromBitmap(resizeFlagIcon(rate))));
+        Marker marker;
+        if (!visit) {
+            marker = mMap.addMarker(new MarkerOptions()
+                    .position(latLng)
+                    .icon(BitmapDescriptorFactory.fromBitmap(resizeIcon(rate, R.drawable.unvisited_icon))));
+        }
+        else {
+            marker = mMap.addMarker(new MarkerOptions()
+                    .position(latLng)
+                    .icon(BitmapDescriptorFactory.fromBitmap(resizeIcon(rate, R.drawable.visited_icon))));
+        }
 
         CustomMarker custom = new CustomMarker(marker,latLng,visit,rate,title,url,snippet);
         markerArrayList.add(custom);
@@ -294,9 +302,9 @@ public class MapsActivity extends ActionBarActivity implements
         }
     }
 
-    public Bitmap resizeFlagIcon(Double rating){
+    public Bitmap resizeIcon(Double rating, int k){
         int size = (int) (rating * 15 + 10);
-        Bitmap imageBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.red_flag);
+        Bitmap imageBitmap = BitmapFactory.decodeResource(getResources(),k);
         Bitmap resizedBitmap = Bitmap.createScaledBitmap(imageBitmap, size, size, false);
         return resizedBitmap;
     }

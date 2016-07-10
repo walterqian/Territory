@@ -47,10 +47,15 @@
         android:layout_marginLeft="20dp"
         android:layout_marginRight="20dp"
         android:layout_height="60dp"
-        android:text="Tell us your thoughts!"
         android:textAlignment="center"
         android:textColor="@color/Black"
+        android:gravity="center"
+        android:hint="Tell us your thoughts!"
         android:layout_gravity="center_horizontal"/>
+
+    <TextView android:layout_height="0dip"
+        android:layout_width="fill_parent"
+        android:layout_weight="1" />
 
     <Button
         android:layout_gravity="center_horizontal"
@@ -58,7 +63,6 @@
         android:id="@+id/submit"
         android:text="Submit"
         android:textSize="16dp"
-        android:layout_marginTop="30dp"
         android:layout_width="match_parent"
         android:background="@drawable/buttonshape"
         android:layout_height="45dp" />
